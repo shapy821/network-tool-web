@@ -363,7 +363,8 @@
   var state = {
     ouiMap: {},
     selectedCidr: "/24",
-    uploadedImage: null
+    uploadedImage: null,
+    uploadedFile: null
   };
 
   var cidrOptions = [
@@ -620,8 +621,6 @@
   function initImageSearch() {
     var dropzone = document.getElementById("dropzone");
     var fileInput = document.getElementById("imageInput");
-    var preview = document.getElementById("imagePreview");
-    var previewImg = document.getElementById("previewImg");
     var removeBtn = document.getElementById("removeImage");
     var googleBtn = document.getElementById("searchGoogleBtn");
     var bingBtn = document.getElementById("searchBingBtn");
@@ -672,20 +671,21 @@
       });
     }
 
-    // Search buttons
+    // Search buttons - upload to imgbb then search
     if (googleBtn) {
       googleBtn.addEventListener("click", function() {
-        window.open("https://lens.google.com/", "_blank");
+        searchWithImage("google");
       });
     }
     if (bingBtn) {
       bingBtn.addEventListener("click", function() {
-        window.open("https://www.bing.com/visualsearch", "_blank");
+        searchWithImage("bing");
       });
     }
   }
 
   function loadImage(file) {
+    state.uploadedFile = file;
     var reader = new FileReader();
     reader.onload = function(e) {
       state.uploadedImage = e.target.result;
@@ -717,12 +717,65 @@
     var bingBtn = document.getElementById("searchBingBtn");
 
     state.uploadedImage = null;
+    state.uploadedFile = null;
     if (previewImg) previewImg.src = "";
     if (fileInput) fileInput.value = "";
     if (dropzone) dropzone.style.display = "block";
     if (preview) preview.classList.add("hidden");
     if (googleBtn) googleBtn.disabled = true;
     if (bingBtn) bingBtn.disabled = true;
+  }
+
+  // Search with image using form submission
+  function searchWithImage(engine) {
+    if (!state.uploadedFile) return;
+
+    if (engine === "google") {
+      // Create a form to submit to Google Lens
+      var form = document.createElement("form");
+      form.method = "POST";
+      form.action = "https://lens.google.com/v3/upload";
+      form.enctype = "multipart/form-data";
+      form.target = "_blank";
+      form.style.display = "none";
+
+      // Create file input
+      var fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.name = "encoded_image";
+      
+      // Create a DataTransfer to set the file
+      var dt = new DataTransfer();
+      dt.items.add(state.uploadedFile);
+      fileInput.files = dt.files;
+
+      form.appendChild(fileInput);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    } else {
+      // For Bing, use their visual search with clipboard/paste approach
+      // Create a form for Bing
+      var form = document.createElement("form");
+      form.method = "POST";
+      form.action = "https://www.bing.com/images/search?view=detailv2&iss=sbiupload&FORM=SBIHMP";
+      form.enctype = "multipart/form-data";
+      form.target = "_blank";
+      form.style.display = "none";
+
+      var fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.name = "imageBin";
+      
+      var dt = new DataTransfer();
+      dt.items.add(state.uploadedFile);
+      fileInput.files = dt.files;
+
+      form.appendChild(fileInput);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    }
   }
 
   // ========================================
