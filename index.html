@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Network Toolkit - MAC OUI Lookup and IP/Netmask Calculator" />
+  <meta name="description" content="Network Toolkit - MAC OUI Lookup, IP Calculator, Reverse Image Search" />
   <title>Network Toolkit</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
@@ -17,7 +17,7 @@
         <span class="icon-dark">🌙</span>
       </button>
       <h1>Network Toolkit</h1>
-      <p>MAC OUI Lookup &amp; IP Calculator</p>
+      <p>OUI Lookup · IP Calculator · Image Search</p>
     </header>
 
     <section class="card">
@@ -68,34 +68,14 @@
           <input id="ipInput" type="text" placeholder="192.168.1.10" autocomplete="off" spellcheck="false" />
         </div>
         <div class="field">
-          <label for="maskInput">CIDR / Netmask</label>
-          <select id="maskInput">
-            <option value="/8">/8 - 255.0.0.0 (16M hosts)</option>
-            <option value="/9">/9 - 255.128.0.0 (8M hosts)</option>
-            <option value="/10">/10 - 255.192.0.0 (4M hosts)</option>
-            <option value="/11">/11 - 255.224.0.0 (2M hosts)</option>
-            <option value="/12">/12 - 255.240.0.0 (1M hosts)</option>
-            <option value="/13">/13 - 255.248.0.0 (512K hosts)</option>
-            <option value="/14">/14 - 255.252.0.0 (256K hosts)</option>
-            <option value="/15">/15 - 255.254.0.0 (128K hosts)</option>
-            <option value="/16">/16 - 255.255.0.0 (65K hosts)</option>
-            <option value="/17">/17 - 255.255.128.0 (32K hosts)</option>
-            <option value="/18">/18 - 255.255.192.0 (16K hosts)</option>
-            <option value="/19">/19 - 255.255.224.0 (8K hosts)</option>
-            <option value="/20">/20 - 255.255.240.0 (4K hosts)</option>
-            <option value="/21">/21 - 255.255.248.0 (2K hosts)</option>
-            <option value="/22">/22 - 255.255.252.0 (1K hosts)</option>
-            <option value="/23">/23 - 255.255.254.0 (510 hosts)</option>
-            <option value="/24" selected>/24 - 255.255.255.0 (254 hosts)</option>
-            <option value="/25">/25 - 255.255.255.128 (126 hosts)</option>
-            <option value="/26">/26 - 255.255.255.192 (62 hosts)</option>
-            <option value="/27">/27 - 255.255.255.224 (30 hosts)</option>
-            <option value="/28">/28 - 255.255.255.240 (14 hosts)</option>
-            <option value="/29">/29 - 255.255.255.248 (6 hosts)</option>
-            <option value="/30">/30 - 255.255.255.252 (2 hosts)</option>
-            <option value="/31">/31 - 255.255.255.254 (P2P link)</option>
-            <option value="/32">/32 - 255.255.255.255 (1 host)</option>
-          </select>
+          <label>CIDR / Netmask</label>
+          <div class="custom-select" id="maskSelect">
+            <div class="select-selected" id="maskSelected">
+              <span class="cidr-badge">/24</span>
+              <span class="mask-detail">255.255.255.0 · 254 hosts</span>
+            </div>
+            <div class="select-items select-hide" id="maskOptions"></div>
+          </div>
         </div>
       </div>
       <div class="actions">
@@ -106,8 +86,32 @@
       <div id="ipResult" class="result"></div>
     </section>
 
+    <section class="card">
+      <h2>Reverse Image Search</h2>
+      <p class="hint" style="margin-top: 0;">Drag & drop an image or select from your device to search on Google.</p>
+      
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-content">
+          <div class="dropzone-icon">🖼️</div>
+          <p class="dropzone-text">Drop image here</p>
+          <p class="dropzone-subtext">or click to select</p>
+        </div>
+        <input type="file" id="imageInput" accept="image/*" hidden />
+      </div>
+      
+      <div id="imagePreview" class="image-preview hidden">
+        <img id="previewImg" src="" alt="Preview" />
+        <button id="removeImage" class="remove-btn" title="Remove">×</button>
+      </div>
+      
+      <div class="actions">
+        <button id="searchGoogleBtn" disabled>Search on Google</button>
+        <button id="searchBingBtn" class="secondary" disabled>Search on Bing</button>
+      </div>
+    </section>
+
     <footer>
-      <p>All calculations run locally in your browser · Works offline</p>
+      <p>All processing runs locally in your browser · Works offline</p>
     </footer>
   </div>
 

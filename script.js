@@ -405,8 +405,39 @@ const state = {
   ouiMap: new Map(),
   loadedCount: 0,
   lastMacResult: "",
-  lastIpResult: ""
+  lastIpResult: "",
+  selectedCidr: "/24",
+  uploadedImage: null
 };
+
+// CIDR options data
+const cidrOptions = [
+  { cidr: "/8", mask: "255.0.0.0", hosts: "16M" },
+  { cidr: "/9", mask: "255.128.0.0", hosts: "8M" },
+  { cidr: "/10", mask: "255.192.0.0", hosts: "4M" },
+  { cidr: "/11", mask: "255.224.0.0", hosts: "2M" },
+  { cidr: "/12", mask: "255.240.0.0", hosts: "1M" },
+  { cidr: "/13", mask: "255.248.0.0", hosts: "512K" },
+  { cidr: "/14", mask: "255.252.0.0", hosts: "256K" },
+  { cidr: "/15", mask: "255.254.0.0", hosts: "128K" },
+  { cidr: "/16", mask: "255.255.0.0", hosts: "65K" },
+  { cidr: "/17", mask: "255.255.128.0", hosts: "32K" },
+  { cidr: "/18", mask: "255.255.192.0", hosts: "16K" },
+  { cidr: "/19", mask: "255.255.224.0", hosts: "8K" },
+  { cidr: "/20", mask: "255.255.240.0", hosts: "4K" },
+  { cidr: "/21", mask: "255.255.248.0", hosts: "2K" },
+  { cidr: "/22", mask: "255.255.252.0", hosts: "1K" },
+  { cidr: "/23", mask: "255.255.254.0", hosts: "510" },
+  { cidr: "/24", mask: "255.255.255.0", hosts: "254" },
+  { cidr: "/25", mask: "255.255.255.128", hosts: "126" },
+  { cidr: "/26", mask: "255.255.255.192", hosts: "62" },
+  { cidr: "/27", mask: "255.255.255.224", hosts: "30" },
+  { cidr: "/28", mask: "255.255.255.240", hosts: "14" },
+  { cidr: "/29", mask: "255.255.255.248", hosts: "6" },
+  { cidr: "/30", mask: "255.255.255.252", hosts: "2" },
+  { cidr: "/31", mask: "255.255.255.254", hosts: "P2P" },
+  { cidr: "/32", mask: "255.255.255.255", hosts: "1" }
+];
 
 // ========================================
 // Theme Toggle
@@ -668,11 +699,11 @@ function calcNetworkInfo(ipStr, maskStr) {
 
 function handleIpCalc() {
   const ipInput = document.getElementById("ipInput").value.trim();
-  const maskInput = document.getElementById("maskInput").value.trim();
+  const maskInput = state.selectedCidr;
   const result = document.getElementById("ipResult");
 
-  if (!ipInput || !maskInput) {
-    result.textContent = "Please enter IP and Netmask/CIDR.";
+  if (!ipInput) {
+    result.textContent = "Please enter an IP address.";
     state.lastIpResult = "";
     return;
   }
@@ -701,9 +732,199 @@ function handleIpCalc() {
 
 function clearIpResult() {
   document.getElementById("ipInput").value = "";
-  document.getElementById("maskInput").value = "/24";
+  state.selectedCidr = "/24";
+  updateSelectDisplay();
   document.getElementById("ipResult").textContent = "";
   state.lastIpResult = "";
+}
+
+// ========================================
+// Custom Select Dropdown
+// ========================================
+function initCustomSelect() {
+  const optionsContainer = document.getElementById("maskOptions");
+  const selectedDisplay = document.getElementById("maskSelected");
+  const selectBox = document.getElementById("maskSelect");
+
+  // Build options
+  cidrOptions.forEach(opt => {
+    const item = document.createElement("div");
+    item.className = "select-item" + (opt.cidr === state.selectedCidr ? " selected" : "");
+    item.dataset.value = opt.cidr;
+    item.innerHTML = `
+      <span class="cidr-badge">${opt.cidr}</span>
+      <span class="mask-detail">${opt.mask} · ${opt.hosts} hosts</span>
+    `;
+    item.addEventListener("click", () => selectCidr(opt.cidr));
+    optionsContainer.appendChild(item);
+  });
+
+  // Toggle dropdown
+  selectedDisplay.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !optionsContainer.classList.contains("select-hide");
+    closeAllSelects();
+    if (!isOpen) {
+      optionsContainer.classList.remove("select-hide");
+      selectedDisplay.classList.add("active");
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener("click", closeAllSelects);
+}
+
+function selectCidr(cidr) {
+  state.selectedCidr = cidr;
+  updateSelectDisplay();
+  closeAllSelects();
+  
+  // Auto calculate if IP is entered
+  const ipInput = document.getElementById("ipInput").value.trim();
+  if (ipInput) {
+    handleIpCalc();
+  }
+}
+
+function updateSelectDisplay() {
+  const opt = cidrOptions.find(o => o.cidr === state.selectedCidr);
+  const selectedDisplay = document.getElementById("maskSelected");
+  selectedDisplay.innerHTML = `
+    <span class="cidr-badge">${opt.cidr}</span>
+    <span class="mask-detail">${opt.mask} · ${opt.hosts} hosts</span>
+  `;
+
+  // Update selected state in options
+  document.querySelectorAll(".select-item").forEach(item => {
+    item.classList.toggle("selected", item.dataset.value === state.selectedCidr);
+  });
+}
+
+function closeAllSelects() {
+  document.querySelectorAll(".select-items").forEach(el => el.classList.add("select-hide"));
+  document.querySelectorAll(".select-selected").forEach(el => el.classList.remove("active"));
+}
+
+// ========================================
+// Reverse Image Search
+// ========================================
+function initImageSearch() {
+  const dropzone = document.getElementById("dropzone");
+  const imageInput = document.getElementById("imageInput");
+  const imagePreview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+  const removeBtn = document.getElementById("removeImage");
+  const searchGoogleBtn = document.getElementById("searchGoogleBtn");
+  const searchBingBtn = document.getElementById("searchBingBtn");
+
+  // Click to select
+  dropzone.addEventListener("click", () => imageInput.click());
+
+  // File input change
+  imageInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) handleImageFile(file);
+  });
+
+  // Drag and drop
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+
+  dropzone.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+  });
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      handleImageFile(file);
+    }
+  });
+
+  // Remove image
+  removeBtn.addEventListener("click", () => {
+    clearImage();
+  });
+
+  // Search buttons
+  searchGoogleBtn.addEventListener("click", () => searchOnGoogle());
+  searchBingBtn.addEventListener("click", () => searchOnBing());
+}
+
+function handleImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.uploadedImage = e.target.result;
+    showImagePreview(e.target.result);
+    enableSearchButtons();
+  };
+  reader.readAsDataURL(file);
+}
+
+function showImagePreview(dataUrl) {
+  const dropzone = document.getElementById("dropzone");
+  const imagePreview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+
+  previewImg.src = dataUrl;
+  dropzone.style.display = "none";
+  imagePreview.classList.remove("hidden");
+}
+
+function clearImage() {
+  const dropzone = document.getElementById("dropzone");
+  const imagePreview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+  const imageInput = document.getElementById("imageInput");
+
+  state.uploadedImage = null;
+  previewImg.src = "";
+  imageInput.value = "";
+  imagePreview.classList.add("hidden");
+  dropzone.style.display = "block";
+  disableSearchButtons();
+}
+
+function enableSearchButtons() {
+  document.getElementById("searchGoogleBtn").disabled = false;
+  document.getElementById("searchBingBtn").disabled = false;
+}
+
+function disableSearchButtons() {
+  document.getElementById("searchGoogleBtn").disabled = true;
+  document.getElementById("searchBingBtn").disabled = true;
+}
+
+function searchOnGoogle() {
+  if (!state.uploadedImage) return;
+  
+  // Google Lens uses a form submission with the image
+  // We'll open Google Images and user can paste/upload
+  // For direct search, we need to use Google's upload endpoint
+  
+  // Create a form to submit to Google
+  const googleLensUrl = "https://lens.google.com/uploadbyurl?url=";
+  
+  // Since we have a data URL, we need to use the upload form approach
+  // Open Google Images search by image page
+  window.open("https://images.google.com/", "_blank");
+  
+  // Show instruction
+  alert("Google Images opened in a new tab.\n\nClick the camera icon 📷 and paste or upload your image to search.");
+}
+
+function searchOnBing() {
+  if (!state.uploadedImage) return;
+  
+  // Open Bing Visual Search
+  window.open("https://www.bing.com/visualsearch", "_blank");
+  
+  alert("Bing Visual Search opened in a new tab.\n\nDrag your image or click to upload and search.");
 }
 
 function exportIpResult() {
@@ -750,6 +971,7 @@ function init() {
   document.getElementById("ouiFile").addEventListener("change", handleOuiFile);
 
   // IP Calculator
+  initCustomSelect();
   document.getElementById("ipCalcBtn").addEventListener("click", handleIpCalc);
   document.getElementById("ipClearBtn").addEventListener("click", clearIpResult);
   document.getElementById("ipExportBtn").addEventListener("click", exportIpResult);
@@ -761,9 +983,9 @@ function init() {
   document.getElementById("ipInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") handleIpCalc();
   });
-  document.getElementById("maskInput").addEventListener("change", () => {
-    handleIpCalc();
-  });
+
+  // Image Search
+  initImageSearch();
 }
 
 init();
