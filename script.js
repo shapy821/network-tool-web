@@ -456,6 +456,104 @@
     if (result) result.textContent = "";
   }
 
+  function showOuiStatus(message, type) {
+    var status = document.getElementById("ouiStatus");
+    if (!status) return;
+    status.textContent = message;
+    status.className = "oui-status visible " + (type || "");
+  }
+
+  function hideOuiStatus() {
+    var status = document.getElementById("ouiStatus");
+    if (status) status.className = "oui-status";
+  }
+
+  // Load full OUI database from Wireshark
+  function loadWiresharkOui() {
+    var btn = document.getElementById("loadWiresharkBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+    }
+    showOuiStatus("Fetching Wireshark OUI database (50,000+ entries)...", "loading");
+
+    // Use CORS proxy to fetch Wireshark's manuf file
+    var proxyUrl = "https://api.allorigins.win/raw?url=";
+    var wiresharkUrl = "https://www.wireshark.org/download/automated/data/manuf";
+
+    fetch(proxyUrl + encodeURIComponent(wiresharkUrl))
+      .then(function(response) {
+        if (!response.ok) throw new Error("Fetch failed");
+        return response.text();
+      })
+      .then(function(text) {
+        var lines = text.split("\n");
+        var count = 0;
+        state.ouiMap = {};
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          // Skip comments and empty lines
+          if (!line || line.charAt(0) === "#") continue;
+
+          // Format: XX:XX:XX[/mask] <short_name> [<long_name>]
+          // Or: XX-XX-XX <short_name> [<long_name>]
+          var match = line.match(/^([0-9A-Fa-f:/-]+)\s+(\S+)(?:\s+(.+))?$/);
+          if (match) {
+            var oui = match[1].replace(/[:\-]/g, "").substring(0, 6).toUpperCase();
+            // Skip entries with masks (like XX:XX:XX/28)
+            if (match[1].indexOf("/") !== -1) continue;
+            if (oui.length === 6) {
+              // Prefer long name if available, otherwise use short name
+              var vendor = match[3] ? match[3] : match[2];
+              state.ouiMap[oui] = vendor;
+              count++;
+            }
+          }
+        }
+
+        showOuiStatus("Loaded " + count.toLocaleString() + " OUI entries from Wireshark database.", "success");
+        
+        // Save to localStorage for offline use
+        try {
+          localStorage.setItem("ouiDatabase", JSON.stringify(state.ouiMap));
+          localStorage.setItem("ouiDatabaseDate", new Date().toISOString());
+        } catch (e) {
+          console.log("Could not cache OUI database:", e);
+        }
+      })
+      .catch(function(err) {
+        console.error("Failed to load Wireshark OUI:", err);
+        showOuiStatus("Failed to fetch database. Using built-in data.", "error");
+      })
+      .finally(function() {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Load Full Database";
+        }
+      });
+  }
+
+  // Try to load cached OUI database on startup
+  function loadCachedOui() {
+    try {
+      var cached = localStorage.getItem("ouiDatabase");
+      var date = localStorage.getItem("ouiDatabaseDate");
+      if (cached) {
+        state.ouiMap = JSON.parse(cached);
+        var count = Object.keys(state.ouiMap).length;
+        if (count > 1000) {
+          var dateStr = date ? new Date(date).toLocaleDateString() : "unknown";
+          showOuiStatus("Using cached database (" + count.toLocaleString() + " entries, loaded " + dateStr + ")", "success");
+          return true;
+        }
+      }
+    } catch (e) {
+      console.log("Could not load cached OUI:", e);
+    }
+    return false;
+  }
+
   // ========================================
   // IP Calculator
   // ========================================
@@ -789,14 +887,18 @@
       themeBtn.addEventListener("click", toggleTheme);
     }
 
-    // OUI
-    loadOui();
+    // OUI - try cached first, fallback to built-in
+    if (!loadCachedOui()) {
+      loadOui();
+    }
     var macLookupBtn = document.getElementById("macLookupBtn");
     var macClearBtn = document.getElementById("macClearBtn");
+    var loadWiresharkBtn = document.getElementById("loadWiresharkBtn");
     var macInput = document.getElementById("macInput");
 
     if (macLookupBtn) macLookupBtn.addEventListener("click", lookupOui);
     if (macClearBtn) macClearBtn.addEventListener("click", clearMac);
+    if (loadWiresharkBtn) loadWiresharkBtn.addEventListener("click", loadWiresharkOui);
     if (macInput) {
       macInput.addEventListener("keypress", function(e) {
         if (e.key === "Enter") lookupOui();

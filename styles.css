@@ -431,6 +431,33 @@ button.secondary:hover:not(:disabled) {
   font-style: italic;
 }
 
+/* OUI Status */
+.oui-status {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  display: none;
+}
+
+.oui-status.visible {
+  display: block;
+}
+
+.oui-status.loading {
+  color: var(--accent);
+}
+
+.oui-status.success {
+  color: var(--success);
+}
+
+.oui-status.error {
+  color: var(--error);
+}
+
 /* Dropzone for Image Upload */
 .dropzone {
   border: 2px dashed var(--border-color-strong);
