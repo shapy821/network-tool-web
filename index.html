@@ -3,80 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Network Toolkit - OUI Lookup / IP Calculator</title>
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="Network Toolkit - MAC OUI Lookup and IP/Netmask Calculator" />
+  <title>Network Toolkit</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Network Toolkit</h1>
-      <p>MAC OUI Lookup &amp; IP/Netmask Calculator</p>
-      <button id="themeToggle" class="theme-btn" title="Toggle dark mode">
-        <span class="icon-light">&#9728;</span>
-        <span class="icon-dark">&#9790;</span>
+      <button id="themeToggle" class="theme-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="icon-light">☀️</span>
+        <span class="icon-dark">🌙</span>
       </button>
+      <h1>Network Toolkit</h1>
+      <p>MAC OUI Lookup &amp; IP Calculator</p>
     </header>
 
     <section class="card">
-      <h2>MAC OUI Lookup</h2>
+      <h2>OUI Lookup</h2>
       <div class="field">
         <label for="macInput">MAC Address</label>
-        <input id="macInput" type="text" placeholder="e.g. 00:1A:2B:3C:4D:5E" />
+        <input id="macInput" type="text" placeholder="00:1A:2B:3C:4D:5E" autocomplete="off" spellcheck="false" />
       </div>
       <div class="actions">
         <button id="macLookupBtn">Lookup</button>
         <button id="macClearBtn" class="secondary">Clear</button>
-        <button id="macExportBtn" class="secondary">Export Result</button>
+        <button id="macExportBtn" class="secondary">Export</button>
       </div>
       <div id="macResult" class="result"></div>
 
       <details class="oui-data">
-        <summary>Advanced: Custom OUI Database (paste or upload)</summary>
+        <summary>Advanced Options</summary>
         <p class="hint">
-          Supported formats: <code>AA-BB-CC Vendor</code>, <code>AA:BB:CC&#9;Vendor</code>, or <code>AABBCC Vendor</code>
+          Load custom OUI database or fetch the complete IEEE list.
+          <br />
+          Supported formats: <code>AA-BB-CC Vendor</code> or <code>AA:BB:CC Vendor</code>
         </p>
         <p class="hint">
-          <a href="https://standards-oui.ieee.org/oui/oui.txt" target="_blank" rel="noopener">Download IEEE OUI (oui.txt)</a>
+          <a href="https://standards-oui.ieee.org/oui/oui.txt" target="_blank" rel="noopener">Download IEEE OUI Database →</a>
         </p>
         <div class="field">
-          <label for="ouiTextarea">OUI Data (one per line)</label>
-          <textarea id="ouiTextarea" rows="6" placeholder="e.g. 00-1A-2B Acme Corp"></textarea>
+          <label for="ouiTextarea">OUI Data</label>
+          <textarea id="ouiTextarea" placeholder="Paste OUI data here (one entry per line)"></textarea>
         </div>
         <div class="field">
-          <label for="ouiFile">Upload OUI file (txt/csv)</label>
+          <label for="ouiFile">Upload File</label>
           <input id="ouiFile" type="file" accept=".txt,.csv" />
         </div>
         <div class="actions">
-          <button id="ouiLoadBtn">Load into Memory</button>
+          <button id="ouiLoadBtn">Load Data</button>
           <button id="ouiFetchBtn" class="secondary">Fetch IEEE OUI</button>
-          <button id="ouiResetBtn" class="secondary">Reset to Default</button>
+          <button id="ouiResetBtn" class="secondary">Reset</button>
         </div>
         <div id="ouiStatus" class="status"></div>
       </details>
     </section>
 
     <section class="card">
-      <h2>IP / Netmask Calculator</h2>
+      <h2>IP Calculator</h2>
       <div class="grid">
         <div class="field">
           <label for="ipInput">IP Address</label>
-          <input id="ipInput" type="text" placeholder="e.g. 192.168.1.10" />
+          <input id="ipInput" type="text" placeholder="192.168.1.10" autocomplete="off" spellcheck="false" />
         </div>
         <div class="field">
-          <label for="maskInput">Netmask or CIDR</label>
-          <input id="maskInput" type="text" placeholder="e.g. 255.255.255.0 or /24" />
+          <label for="maskInput">Netmask / CIDR</label>
+          <input id="maskInput" type="text" placeholder="255.255.255.0 or /24" autocomplete="off" spellcheck="false" />
         </div>
       </div>
       <div class="actions">
         <button id="ipCalcBtn">Calculate</button>
         <button id="ipClearBtn" class="secondary">Clear</button>
-        <button id="ipExportBtn" class="secondary">Export Result</button>
+        <button id="ipExportBtn" class="secondary">Export</button>
       </div>
       <div id="ipResult" class="result"></div>
     </section>
 
     <footer>
-      <p>Offline capable - All calculations run locally in your browser</p>
+      <p>All calculations run locally in your browser · Works offline</p>
     </footer>
   </div>
 
