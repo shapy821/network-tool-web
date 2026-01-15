@@ -468,70 +468,100 @@
     if (status) status.className = "oui-status";
   }
 
-  // Load full OUI database from Wireshark
+  // Load full OUI database from multiple sources
   function loadWiresharkOui() {
     var btn = document.getElementById("loadWiresharkBtn");
     if (btn) {
       btn.disabled = true;
       btn.textContent = "Loading...";
     }
-    showOuiStatus("Fetching Wireshark OUI database (50,000+ entries)...", "loading");
+    showOuiStatus("Fetching OUI database (50,000+ entries)...", "loading");
 
-    // Use CORS proxy to fetch Wireshark's manuf file
-    var proxyUrl = "https://api.allorigins.win/raw?url=";
-    var wiresharkUrl = "https://www.wireshark.org/download/automated/data/manuf";
+    // Multiple sources to try
+    var sources = [
+      // GitHub mirror of Wireshark manuf
+      "https://raw.githubusercontent.com/wireshark/wireshark/master/manuf",
+      // Alternative GitHub mirrors
+      "https://raw.githubusercontent.com/boundary/wireshark/master/manuf",
+      // CORS proxies as fallback
+      "https://corsproxy.io/?" + encodeURIComponent("https://www.wireshark.org/download/automated/data/manuf"),
+      "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent("https://www.wireshark.org/download/automated/data/manuf")
+    ];
 
-    fetch(proxyUrl + encodeURIComponent(wiresharkUrl))
+    tryFetchOui(sources, 0, btn);
+  }
+
+  function tryFetchOui(sources, index, btn) {
+    if (index >= sources.length) {
+      showOuiStatus("All sources failed. Using built-in data (" + Object.keys(state.ouiMap).length + " entries).", "error");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Load Full Database";
+      }
+      return;
+    }
+
+    showOuiStatus("Trying source " + (index + 1) + "/" + sources.length + "...", "loading");
+
+    fetch(sources[index])
       .then(function(response) {
-        if (!response.ok) throw new Error("Fetch failed");
+        if (!response.ok) throw new Error("HTTP " + response.status);
         return response.text();
       })
       .then(function(text) {
-        var lines = text.split("\n");
-        var count = 0;
-        state.ouiMap = {};
-
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          // Skip comments and empty lines
-          if (!line || line.charAt(0) === "#") continue;
-
-          // Format: XX:XX:XX[/mask] <short_name> [<long_name>]
-          // Or: XX-XX-XX <short_name> [<long_name>]
-          var match = line.match(/^([0-9A-Fa-f:/-]+)\s+(\S+)(?:\s+(.+))?$/);
-          if (match) {
-            var oui = match[1].replace(/[:\-]/g, "").substring(0, 6).toUpperCase();
-            // Skip entries with masks (like XX:XX:XX/28)
-            if (match[1].indexOf("/") !== -1) continue;
-            if (oui.length === 6) {
-              // Prefer long name if available, otherwise use short name
-              var vendor = match[3] ? match[3] : match[2];
-              state.ouiMap[oui] = vendor;
-              count++;
-            }
+        var count = parseOuiData(text);
+        if (count > 1000) {
+          showOuiStatus("Loaded " + count.toLocaleString() + " OUI entries successfully!", "success");
+          
+          // Save to localStorage for offline use
+          try {
+            localStorage.setItem("ouiDatabase", JSON.stringify(state.ouiMap));
+            localStorage.setItem("ouiDatabaseDate", new Date().toISOString());
+          } catch (e) {
+            console.log("Could not cache OUI database:", e);
           }
-        }
-
-        showOuiStatus("Loaded " + count.toLocaleString() + " OUI entries from Wireshark database.", "success");
-        
-        // Save to localStorage for offline use
-        try {
-          localStorage.setItem("ouiDatabase", JSON.stringify(state.ouiMap));
-          localStorage.setItem("ouiDatabaseDate", new Date().toISOString());
-        } catch (e) {
-          console.log("Could not cache OUI database:", e);
+          
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Load Full Database";
+          }
+        } else {
+          throw new Error("Invalid data");
         }
       })
       .catch(function(err) {
-        console.error("Failed to load Wireshark OUI:", err);
-        showOuiStatus("Failed to fetch database. Using built-in data.", "error");
-      })
-      .finally(function() {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "Load Full Database";
-        }
+        console.log("Source " + (index + 1) + " failed:", err.message);
+        // Try next source
+        tryFetchOui(sources, index + 1, btn);
       });
+  }
+
+  function parseOuiData(text) {
+    var lines = text.split("\n");
+    var count = 0;
+    state.ouiMap = {};
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      // Skip comments and empty lines
+      if (!line || line.charAt(0) === "#") continue;
+
+      // Format: XX:XX:XX[/mask] <short_name> [<long_name>]
+      // Or: XX-XX-XX <short_name> [<long_name>]
+      var match = line.match(/^([0-9A-Fa-f:/-]+)\s+(\S+)(?:\s+(.+))?$/);
+      if (match) {
+        var oui = match[1].replace(/[:\-]/g, "").substring(0, 6).toUpperCase();
+        // Skip entries with masks (like XX:XX:XX/28)
+        if (match[1].indexOf("/") !== -1) continue;
+        if (oui.length === 6) {
+          // Prefer long name if available, otherwise use short name
+          var vendor = match[3] ? match[3] : match[2];
+          state.ouiMap[oui] = vendor;
+          count++;
+        }
+      }
+    }
+    return count;
   }
 
   // Try to load cached OUI database on startup
