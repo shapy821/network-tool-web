@@ -29,35 +29,8 @@
       <div class="actions">
         <button id="macLookupBtn">Lookup</button>
         <button id="macClearBtn" class="secondary">Clear</button>
-        <button id="macExportBtn" class="secondary">Export</button>
       </div>
       <div id="macResult" class="result"></div>
-
-      <details class="oui-data">
-        <summary>Advanced Options</summary>
-        <p class="hint">
-          Load custom OUI database or fetch the complete IEEE list.
-          <br />
-          Supported formats: <code>AA-BB-CC Vendor</code> or <code>AA:BB:CC Vendor</code>
-        </p>
-        <p class="hint">
-          <a href="https://standards-oui.ieee.org/oui/oui.txt" target="_blank" rel="noopener">Download IEEE OUI Database →</a>
-        </p>
-        <div class="field">
-          <label for="ouiTextarea">OUI Data</label>
-          <textarea id="ouiTextarea" placeholder="Paste OUI data here (one entry per line)"></textarea>
-        </div>
-        <div class="field">
-          <label for="ouiFile">Upload File</label>
-          <input id="ouiFile" type="file" accept=".txt,.csv" />
-        </div>
-        <div class="actions">
-          <button id="ouiLoadBtn">Load Data</button>
-          <button id="ouiFetchBtn" class="secondary">Fetch IEEE OUI</button>
-          <button id="ouiResetBtn" class="secondary">Reset</button>
-        </div>
-        <div id="ouiStatus" class="status"></div>
-      </details>
     </section>
 
     <section class="card">

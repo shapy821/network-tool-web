@@ -903,19 +903,8 @@ function disableSearchButtons() {
 function searchOnGoogle() {
   if (!state.uploadedImage) return;
   
-  // Google Lens uses a form submission with the image
-  // We'll open Google Images and user can paste/upload
-  // For direct search, we need to use Google's upload endpoint
-  
-  // Create a form to submit to Google
-  const googleLensUrl = "https://lens.google.com/uploadbyurl?url=";
-  
-  // Since we have a data URL, we need to use the upload form approach
-  // Open Google Images search by image page
-  window.open("https://images.google.com/", "_blank");
-  
-  // Show instruction
-  alert("Google Images opened in a new tab.\n\nClick the camera icon 📷 and paste or upload your image to search.");
+  // Open Google Lens upload page directly
+  window.open("https://lens.google.com/", "_blank");
 }
 
 function searchOnBing() {
@@ -923,8 +912,6 @@ function searchOnBing() {
   
   // Open Bing Visual Search
   window.open("https://www.bing.com/visualsearch", "_blank");
-  
-  alert("Bing Visual Search opened in a new tab.\n\nDrag your image or click to upload and search.");
 }
 
 function exportIpResult() {
@@ -964,11 +951,6 @@ function init() {
   // MAC OUI
   document.getElementById("macLookupBtn").addEventListener("click", handleOuiLookup);
   document.getElementById("macClearBtn").addEventListener("click", clearMacResult);
-  document.getElementById("macExportBtn").addEventListener("click", exportMacResult);
-  document.getElementById("ouiLoadBtn").addEventListener("click", handleOuiLoad);
-  document.getElementById("ouiFetchBtn").addEventListener("click", handleOuiFetch);
-  document.getElementById("ouiResetBtn").addEventListener("click", handleOuiReset);
-  document.getElementById("ouiFile").addEventListener("change", handleOuiFile);
 
   // IP Calculator
   initCustomSelect();
