@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>蝬脰楝撌亙蝞?- OUI ?亥岷 / IP 閮?</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>蝬脰楝撌亙蝞?/h1>
+      <p>MAC OUI ?亥岷??IP/Netmask 閮?</p>
+    </header>
+
+    <section class="card">
+      <h2>MAC OUI ?亥岷</h2>
+      <div class="field">
+        <label for="macInput">MAC 雿?</label>
+        <input id="macInput" type="text" placeholder="靘?: 00:1A:2B:3C:4D:5E" />
+      </div>
+      <div class="actions">
+        <button id="macLookupBtn">?亥岷</button>
+        <button id="macClearBtn" class="secondary">皜</button>
+      </div>
+      <div id="macResult" class="result"></div>
+
+      <details class="oui-data">
+        <summary>?脤?嚗閮?OUI 鞈?摨恬??航票銝?銝嚗?/summary>
+        <p class="hint">?澆??舀嚗?code>AA-BB-CC Vendor</code>??code>AA:BB:CC	Vendor</code> ??<code>AABBCC Vendor</code></p>
+        <div class="field">
+          <label for="ouiTextarea">OUI 鞈?嚗?銵?蝑?</label>
+          <textarea id="ouiTextarea" rows="6" placeholder="靘?: 00-1A-2B Acme Corp"></textarea>
+        </div>
+        <div class="field">
+          <label for="ouiFile">銝 OUI 瑼?嚗xt/csv嚗?/label>
+          <input id="ouiFile" type="file" accept=".txt,.csv" />
+        </div>
+        <div class="actions">
+          <button id="ouiLoadBtn">頛?啗??園?</button>
+          <button id="ouiResetBtn" class="secondary">?身?箏撱箄???/button>
+        </div>
+        <div id="ouiStatus" class="status"></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>IP / Netmask 閮?</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="ipInput">IP 雿?</label>
+          <input id="ipInput" type="text" placeholder="靘?: 192.168.1.10" />
+        </div>
+        <div class="field">
+          <label for="maskInput">Netmask ??CIDR</label>
+          <input id="maskInput" type="text" placeholder="靘?: 255.255.255.0 ??/24" />
+        </div>
+      </div>
+      <div class="actions">
+        <button id="ipCalcBtn">閮?</button>
+        <button id="ipClearBtn" class="secondary">皜</button>
+      </div>
+      <div id="ipResult" class="result"></div>
+    </section>
+
+    <footer>
+      <p>?Ｙ??舐 繚 ???蝞?祆?摰?</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
