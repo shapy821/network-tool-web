@@ -1,8 +1,33 @@
 ﻿:root {
-  color-scheme: light;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  background: #f5f6f8;
-  color: #1f2328;
+  --bg: #f5f6f8;
+  --bg-card: #ffffff;
+  --text: #1f2328;
+  --text-muted: #6b7280;
+  --border: #d9dce1;
+  --primary: #2f6fed;
+  --primary-hover: #1d5ed9;
+  --secondary-bg: #e9edf4;
+  --result-bg: #f3f6ff;
+  --result-border: #d3def8;
+  --success: #0f5132;
+  --error: #b42318;
+  --shadow: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --bg: #0d1117;
+  --bg-card: #161b22;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --primary: #58a6ff;
+  --primary-hover: #79b8ff;
+  --secondary-bg: #21262d;
+  --result-bg: #161b22;
+  --result-border: #30363d;
+  --success: #3fb950;
+  --error: #f85149;
+  --shadow: rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -11,6 +36,10 @@
 
 body {
   margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
 }
 
 .container {
@@ -22,18 +51,62 @@ body {
 header {
   text-align: center;
   margin-bottom: 28px;
+  position: relative;
 }
 
 h1 {
   margin-bottom: 6px;
 }
 
+header p {
+  color: var(--text-muted);
+}
+
+.theme-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.theme-btn:hover {
+  background: var(--border);
+}
+
+.icon-dark {
+  display: none;
+}
+
+[data-theme="dark"] .icon-light {
+  display: none;
+}
+
+[data-theme="dark"] .icon-dark {
+  display: inline;
+}
+
 .card {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px var(--shadow);
   margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
 }
 
 .field {
@@ -43,15 +116,29 @@ h1 {
   margin-bottom: 16px;
 }
 
+label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
 input, textarea {
   padding: 10px 12px;
-  border: 1px solid #d9dce1;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 textarea {
   resize: vertical;
+  font-family: monospace;
 }
 
 .actions {
@@ -67,24 +154,35 @@ button {
   padding: 10px 18px;
   font-size: 14px;
   cursor: pointer;
-  background: #2f6fed;
+  background: var(--primary);
   color: #ffffff;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: var(--primary-hover);
 }
 
 button.secondary {
-  background: #e9edf4;
-  color: #1f2328;
+  background: var(--secondary-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+  background: var(--border);
 }
 
 .result {
-  background: #f3f6ff;
-  border: 1px solid #d3def8;
+  background: var(--result-bg);
+  border: 1px solid var(--result-border);
   border-radius: 10px;
   padding: 12px;
   min-height: 44px;
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-line;
+  font-family: monospace;
 }
 
 .grid {
@@ -95,22 +193,59 @@ button.secondary {
 
 .hint {
   font-size: 13px;
-  color: #4b5563;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.hint a {
+  color: var(--primary);
 }
 
 .status {
   font-size: 13px;
-  color: #0f5132;
+  color: var(--success);
+  margin-top: 8px;
+}
+
+.status.error {
+  color: var(--error);
 }
 
 footer {
   text-align: center;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-muted);
+  margin-top: 20px;
+}
+
+.oui-data {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .oui-data summary {
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 12px;
+  color: var(--text);
+}
+
+.oui-data[open] summary {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 20px 16px 40px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .theme-btn {
+    position: static;
+    margin: 0 auto 16px;
+  }
 }

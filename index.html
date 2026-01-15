@@ -1,70 +1,82 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>蝬脰楝撌亙蝞?- OUI ?亥岷 / IP 閮?</title>
+  <title>Network Toolkit - OUI Lookup / IP Calculator</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>蝬脰楝撌亙蝞?/h1>
-      <p>MAC OUI ?亥岷??IP/Netmask 閮?</p>
+      <h1>Network Toolkit</h1>
+      <p>MAC OUI Lookup &amp; IP/Netmask Calculator</p>
+      <button id="themeToggle" class="theme-btn" title="Toggle dark mode">
+        <span class="icon-light">&#9728;</span>
+        <span class="icon-dark">&#9790;</span>
+      </button>
     </header>
 
     <section class="card">
-      <h2>MAC OUI ?亥岷</h2>
+      <h2>MAC OUI Lookup</h2>
       <div class="field">
-        <label for="macInput">MAC 雿?</label>
-        <input id="macInput" type="text" placeholder="靘?: 00:1A:2B:3C:4D:5E" />
+        <label for="macInput">MAC Address</label>
+        <input id="macInput" type="text" placeholder="e.g. 00:1A:2B:3C:4D:5E" />
       </div>
       <div class="actions">
-        <button id="macLookupBtn">?亥岷</button>
-        <button id="macClearBtn" class="secondary">皜</button>
+        <button id="macLookupBtn">Lookup</button>
+        <button id="macClearBtn" class="secondary">Clear</button>
+        <button id="macExportBtn" class="secondary">Export Result</button>
       </div>
       <div id="macResult" class="result"></div>
 
       <details class="oui-data">
-        <summary>?脤?嚗閮?OUI 鞈?摨恬??航票銝?銝嚗?/summary>
-        <p class="hint">?澆??舀嚗?code>AA-BB-CC Vendor</code>??code>AA:BB:CC	Vendor</code> ??<code>AABBCC Vendor</code></p>
+        <summary>Advanced: Custom OUI Database (paste or upload)</summary>
+        <p class="hint">
+          Supported formats: <code>AA-BB-CC Vendor</code>, <code>AA:BB:CC&#9;Vendor</code>, or <code>AABBCC Vendor</code>
+        </p>
+        <p class="hint">
+          <a href="https://standards-oui.ieee.org/oui/oui.txt" target="_blank" rel="noopener">Download IEEE OUI (oui.txt)</a>
+        </p>
         <div class="field">
-          <label for="ouiTextarea">OUI 鞈?嚗?銵?蝑?</label>
-          <textarea id="ouiTextarea" rows="6" placeholder="靘?: 00-1A-2B Acme Corp"></textarea>
+          <label for="ouiTextarea">OUI Data (one per line)</label>
+          <textarea id="ouiTextarea" rows="6" placeholder="e.g. 00-1A-2B Acme Corp"></textarea>
         </div>
         <div class="field">
-          <label for="ouiFile">銝 OUI 瑼?嚗xt/csv嚗?/label>
+          <label for="ouiFile">Upload OUI file (txt/csv)</label>
           <input id="ouiFile" type="file" accept=".txt,.csv" />
         </div>
         <div class="actions">
-          <button id="ouiLoadBtn">頛?啗??園?</button>
-          <button id="ouiResetBtn" class="secondary">?身?箏撱箄???/button>
+          <button id="ouiLoadBtn">Load into Memory</button>
+          <button id="ouiFetchBtn" class="secondary">Fetch IEEE OUI</button>
+          <button id="ouiResetBtn" class="secondary">Reset to Default</button>
         </div>
         <div id="ouiStatus" class="status"></div>
       </details>
     </section>
 
     <section class="card">
-      <h2>IP / Netmask 閮?</h2>
+      <h2>IP / Netmask Calculator</h2>
       <div class="grid">
         <div class="field">
-          <label for="ipInput">IP 雿?</label>
-          <input id="ipInput" type="text" placeholder="靘?: 192.168.1.10" />
+          <label for="ipInput">IP Address</label>
+          <input id="ipInput" type="text" placeholder="e.g. 192.168.1.10" />
         </div>
         <div class="field">
-          <label for="maskInput">Netmask ??CIDR</label>
-          <input id="maskInput" type="text" placeholder="靘?: 255.255.255.0 ??/24" />
+          <label for="maskInput">Netmask or CIDR</label>
+          <input id="maskInput" type="text" placeholder="e.g. 255.255.255.0 or /24" />
         </div>
       </div>
       <div class="actions">
-        <button id="ipCalcBtn">閮?</button>
-        <button id="ipClearBtn" class="secondary">皜</button>
+        <button id="ipCalcBtn">Calculate</button>
+        <button id="ipClearBtn" class="secondary">Clear</button>
+        <button id="ipExportBtn" class="secondary">Export Result</button>
       </div>
       <div id="ipResult" class="result"></div>
     </section>
 
     <footer>
-      <p>?Ｙ??舐 繚 ???蝞?祆?摰?</p>
+      <p>Offline capable - All calculations run locally in your browser</p>
     </footer>
   </div>
 
