@@ -473,18 +473,6 @@ function parseOuiLines(lines) {
     const line = raw.trim();
     if (!line) return;
 
-    // Handle IEEE format: "XX-XX-XX   (hex)		Vendor Name"
-    const ieeeMatch = line.match(/^([0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2})\s+\(hex\)\s+(.+)$/);
-    if (ieeeMatch) {
-      const key = normalizeOui(ieeeMatch[1]);
-      const vendor = ieeeMatch[2].trim();
-      if (key.length === 6 && vendor) {
-        map.set(key, vendor);
-      }
-      return;
-    }
-
-    // Handle simple format: "XX-XX-XX Vendor" or "XX:XX:XX Vendor" or "XXXXXX Vendor"
     const match = line.match(/^([0-9A-Fa-f:-]{6,})\s+(.+)$/);
     if (!match) return;
 
@@ -503,12 +491,6 @@ function loadOui(lines) {
   state.ouiMap = map;
   state.loadedCount = map.size;
   return map.size;
-}
-
-function showOuiStatus(message, isError = false) {
-  const status = document.getElementById("ouiStatus");
-  status.textContent = message;
-  status.classList.toggle("error", isError);
 }
 
 function handleOuiLookup() {
@@ -534,78 +516,17 @@ function handleOuiLookup() {
   const formattedOui = oui.match(/.{2}/g).join("-");
 
   if (vendor) {
-    state.lastMacResult = `OUI: ${formattedOui}\nVendor: ${vendor}`;
+    state.lastMacResult = "OUI: " + formattedOui + "\nVendor: " + vendor;
   } else {
-    state.lastMacResult = `OUI ${formattedOui} not found in database.\nTry loading the full IEEE OUI list.`;
+    state.lastMacResult = "OUI " + formattedOui + " not found in database.";
   }
   result.textContent = state.lastMacResult;
-}
-
-function handleOuiLoad() {
-  const text = document.getElementById("ouiTextarea").value.trim();
-  if (!text) {
-    showOuiStatus("Please paste OUI data first.", true);
-    return;
-  }
-
-  const lines = text.split(/\r?\n/);
-  const count = loadOui(lines);
-  showOuiStatus(`Loaded ${count.toLocaleString()} OUI entries.`);
-}
-
-function handleOuiFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const content = reader.result || "";
-    document.getElementById("ouiTextarea").value = String(content).trim();
-    showOuiStatus(`File loaded. Click "Load into Memory" to use.`);
-  };
-  reader.readAsText(file);
-}
-
-async function handleOuiFetch() {
-  showOuiStatus("Fetching IEEE OUI database...");
-
-  try {
-    // Use CORS proxy or direct fetch
-    const proxyUrl = "https://api.allorigins.win/raw?url=";
-    const ieeeUrl = "https://standards-oui.ieee.org/oui/oui.txt";
-
-    const response = await fetch(proxyUrl + encodeURIComponent(ieeeUrl));
-    if (!response.ok) throw new Error("Fetch failed");
-
-    const text = await response.text();
-    document.getElementById("ouiTextarea").value = text;
-
-    const lines = text.split(/\r?\n/);
-    const count = loadOui(lines);
-    showOuiStatus(`Fetched and loaded ${count.toLocaleString()} OUI entries from IEEE.`);
-  } catch (err) {
-    showOuiStatus("Failed to fetch. Please download manually and upload.", true);
-  }
-}
-
-function handleOuiReset() {
-  loadOui(defaultOuiLines);
-  document.getElementById("ouiTextarea").value = "";
-  showOuiStatus(`Reset to default database (${state.loadedCount.toLocaleString()} entries).`);
 }
 
 function clearMacResult() {
   document.getElementById("macInput").value = "";
   document.getElementById("macResult").textContent = "";
   state.lastMacResult = "";
-}
-
-function exportMacResult() {
-  if (!state.lastMacResult) {
-    alert("No result to export. Please perform a lookup first.");
-    return;
-  }
-  downloadText("oui-lookup-result.txt", state.lastMacResult);
 }
 
 // ========================================
@@ -647,7 +568,6 @@ function parseMask(maskInput) {
   const maskInt = ipToInt(trimmed);
   if (maskInt === null) return null;
 
-  // Validate contiguous mask
   const inverted = (~maskInt) >>> 0;
   if ((inverted + 1) & inverted) {
     return null;
@@ -684,16 +604,16 @@ function calcNetworkInfo(ipStr, maskStr) {
   const wildcard = (~maskInt) >>> 0;
 
   return {
-    cidr,
+    cidr: cidr,
     mask: intToIp(maskInt),
     network: intToIp(network),
     broadcast: intToIp(broadcast),
     firstHost: intToIp(firstHost),
     lastHost: intToIp(lastHost),
-    hostCount,
+    hostCount: hostCount,
     wildcard: intToIp(wildcard),
-    ipBinary: intToIp(ipInt).split(".").map(n => Number(n).toString(2).padStart(8, "0")).join("."),
-    maskBinary: intToIp(maskInt).split(".").map(n => Number(n).toString(2).padStart(8, "0")).join(".")
+    ipBinary: intToIp(ipInt).split(".").map(function(n) { return Number(n).toString(2).padStart(8, "0"); }).join("."),
+    maskBinary: intToIp(maskInt).split(".").map(function(n) { return Number(n).toString(2).padStart(8, "0"); }).join(".")
   };
 }
 
@@ -715,18 +635,15 @@ function handleIpCalc() {
     return;
   }
 
-  state.lastIpResult = [
-    `CIDR:       /${info.cidr}`,
-    `Netmask:    ${info.mask}`,
-    `Wildcard:   ${info.wildcard}`,
-    `Network:    ${info.network}`,
-    `Broadcast:  ${info.broadcast}`,
-    `Host Range: ${info.firstHost} - ${info.lastHost}`,
-    `Total Hosts: ${info.hostCount.toLocaleString()}`,
-    ``,
-    `IP Binary:   ${info.ipBinary}`,
-    `Mask Binary: ${info.maskBinary}`
-  ].join("\n");
+  state.lastIpResult = "CIDR:       /" + info.cidr + "\n" +
+    "Netmask:    " + info.mask + "\n" +
+    "Wildcard:   " + info.wildcard + "\n" +
+    "Network:    " + info.network + "\n" +
+    "Broadcast:  " + info.broadcast + "\n" +
+    "Host Range: " + info.firstHost + " - " + info.lastHost + "\n" +
+    "Total Hosts: " + info.hostCount.toLocaleString() + "\n\n" +
+    "IP Binary:   " + info.ipBinary + "\n" +
+    "Mask Binary: " + info.maskBinary;
   result.textContent = state.lastIpResult;
 }
 
@@ -738,29 +655,38 @@ function clearIpResult() {
   state.lastIpResult = "";
 }
 
+function exportIpResult() {
+  if (!state.lastIpResult) {
+    alert("No result to export. Please perform a calculation first.");
+    return;
+  }
+  downloadText("ip-calc-result.txt", state.lastIpResult);
+}
+
 // ========================================
 // Custom Select Dropdown
 // ========================================
 function initCustomSelect() {
   const optionsContainer = document.getElementById("maskOptions");
   const selectedDisplay = document.getElementById("maskSelected");
-  const selectBox = document.getElementById("maskSelect");
+
+  if (!optionsContainer || !selectedDisplay) return;
 
   // Build options
-  cidrOptions.forEach(opt => {
+  cidrOptions.forEach(function(opt) {
     const item = document.createElement("div");
     item.className = "select-item" + (opt.cidr === state.selectedCidr ? " selected" : "");
-    item.dataset.value = opt.cidr;
-    item.innerHTML = `
-      <span class="cidr-badge">${opt.cidr}</span>
-      <span class="mask-detail">${opt.mask} · ${opt.hosts} hosts</span>
-    `;
-    item.addEventListener("click", () => selectCidr(opt.cidr));
+    item.setAttribute("data-value", opt.cidr);
+    item.innerHTML = '<span class="cidr-badge">' + opt.cidr + '</span>' +
+      '<span class="mask-detail">' + opt.mask + ' · ' + opt.hosts + ' hosts</span>';
+    item.addEventListener("click", function() {
+      selectCidr(opt.cidr);
+    });
     optionsContainer.appendChild(item);
   });
 
   // Toggle dropdown
-  selectedDisplay.addEventListener("click", (e) => {
+  selectedDisplay.addEventListener("click", function(e) {
     e.stopPropagation();
     const isOpen = !optionsContainer.classList.contains("select-hide");
     closeAllSelects();
@@ -787,22 +713,22 @@ function selectCidr(cidr) {
 }
 
 function updateSelectDisplay() {
-  const opt = cidrOptions.find(o => o.cidr === state.selectedCidr);
+  const opt = cidrOptions.find(function(o) { return o.cidr === state.selectedCidr; });
   const selectedDisplay = document.getElementById("maskSelected");
-  selectedDisplay.innerHTML = `
-    <span class="cidr-badge">${opt.cidr}</span>
-    <span class="mask-detail">${opt.mask} · ${opt.hosts} hosts</span>
-  `;
+  if (!selectedDisplay || !opt) return;
+  
+  selectedDisplay.innerHTML = '<span class="cidr-badge">' + opt.cidr + '</span>' +
+    '<span class="mask-detail">' + opt.mask + ' · ' + opt.hosts + ' hosts</span>';
 
   // Update selected state in options
-  document.querySelectorAll(".select-item").forEach(item => {
-    item.classList.toggle("selected", item.dataset.value === state.selectedCidr);
+  document.querySelectorAll(".select-item").forEach(function(item) {
+    item.classList.toggle("selected", item.getAttribute("data-value") === state.selectedCidr);
   });
 }
 
 function closeAllSelects() {
-  document.querySelectorAll(".select-items").forEach(el => el.classList.add("select-hide"));
-  document.querySelectorAll(".select-selected").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".select-items").forEach(function(el) { el.classList.add("select-hide"); });
+  document.querySelectorAll(".select-selected").forEach(function(el) { el.classList.remove("active"); });
 }
 
 // ========================================
@@ -811,33 +737,35 @@ function closeAllSelects() {
 function initImageSearch() {
   const dropzone = document.getElementById("dropzone");
   const imageInput = document.getElementById("imageInput");
-  const imagePreview = document.getElementById("imagePreview");
-  const previewImg = document.getElementById("previewImg");
   const removeBtn = document.getElementById("removeImage");
   const searchGoogleBtn = document.getElementById("searchGoogleBtn");
   const searchBingBtn = document.getElementById("searchBingBtn");
 
+  if (!dropzone || !imageInput) return;
+
   // Click to select
-  dropzone.addEventListener("click", () => imageInput.click());
+  dropzone.addEventListener("click", function() {
+    imageInput.click();
+  });
 
   // File input change
-  imageInput.addEventListener("change", (e) => {
+  imageInput.addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (file) handleImageFile(file);
   });
 
   // Drag and drop
-  dropzone.addEventListener("dragover", (e) => {
+  dropzone.addEventListener("dragover", function(e) {
     e.preventDefault();
     dropzone.classList.add("dragover");
   });
 
-  dropzone.addEventListener("dragleave", (e) => {
+  dropzone.addEventListener("dragleave", function(e) {
     e.preventDefault();
     dropzone.classList.remove("dragover");
   });
 
-  dropzone.addEventListener("drop", (e) => {
+  dropzone.addEventListener("drop", function(e) {
     e.preventDefault();
     dropzone.classList.remove("dragover");
     const file = e.dataTransfer.files[0];
@@ -847,18 +775,28 @@ function initImageSearch() {
   });
 
   // Remove image
-  removeBtn.addEventListener("click", () => {
-    clearImage();
-  });
+  if (removeBtn) {
+    removeBtn.addEventListener("click", function() {
+      clearImage();
+    });
+  }
 
   // Search buttons
-  searchGoogleBtn.addEventListener("click", () => searchOnGoogle());
-  searchBingBtn.addEventListener("click", () => searchOnBing());
+  if (searchGoogleBtn) {
+    searchGoogleBtn.addEventListener("click", function() {
+      searchOnGoogle();
+    });
+  }
+  if (searchBingBtn) {
+    searchBingBtn.addEventListener("click", function() {
+      searchOnBing();
+    });
+  }
 }
 
 function handleImageFile(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = function(e) {
     state.uploadedImage = e.target.result;
     showImagePreview(e.target.result);
     enableSearchButtons();
@@ -871,9 +809,9 @@ function showImagePreview(dataUrl) {
   const imagePreview = document.getElementById("imagePreview");
   const previewImg = document.getElementById("previewImg");
 
-  previewImg.src = dataUrl;
-  dropzone.style.display = "none";
-  imagePreview.classList.remove("hidden");
+  if (previewImg) previewImg.src = dataUrl;
+  if (dropzone) dropzone.style.display = "none";
+  if (imagePreview) imagePreview.classList.remove("hidden");
 }
 
 function clearImage() {
@@ -883,43 +821,35 @@ function clearImage() {
   const imageInput = document.getElementById("imageInput");
 
   state.uploadedImage = null;
-  previewImg.src = "";
-  imageInput.value = "";
-  imagePreview.classList.add("hidden");
-  dropzone.style.display = "block";
+  if (previewImg) previewImg.src = "";
+  if (imageInput) imageInput.value = "";
+  if (imagePreview) imagePreview.classList.add("hidden");
+  if (dropzone) dropzone.style.display = "block";
   disableSearchButtons();
 }
 
 function enableSearchButtons() {
-  document.getElementById("searchGoogleBtn").disabled = false;
-  document.getElementById("searchBingBtn").disabled = false;
+  const googleBtn = document.getElementById("searchGoogleBtn");
+  const bingBtn = document.getElementById("searchBingBtn");
+  if (googleBtn) googleBtn.disabled = false;
+  if (bingBtn) bingBtn.disabled = false;
 }
 
 function disableSearchButtons() {
-  document.getElementById("searchGoogleBtn").disabled = true;
-  document.getElementById("searchBingBtn").disabled = true;
+  const googleBtn = document.getElementById("searchGoogleBtn");
+  const bingBtn = document.getElementById("searchBingBtn");
+  if (googleBtn) googleBtn.disabled = true;
+  if (bingBtn) bingBtn.disabled = true;
 }
 
 function searchOnGoogle() {
   if (!state.uploadedImage) return;
-  
-  // Open Google Lens upload page directly
   window.open("https://lens.google.com/", "_blank");
 }
 
 function searchOnBing() {
   if (!state.uploadedImage) return;
-  
-  // Open Bing Visual Search
   window.open("https://www.bing.com/visualsearch", "_blank");
-}
-
-function exportIpResult() {
-  if (!state.lastIpResult) {
-    alert("No result to export. Please perform a calculation first.");
-    return;
-  }
-  downloadText("ip-calc-result.txt", state.lastIpResult);
 }
 
 // ========================================
@@ -941,33 +871,52 @@ function downloadText(filename, content) {
 // Initialization
 // ========================================
 function init() {
-  initTheme();
-  loadOui(defaultOuiLines);
-  showOuiStatus(`Loaded default database (${state.loadedCount.toLocaleString()} entries).`);
-
   // Theme
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  initTheme();
+  const themeBtn = document.getElementById("themeToggle");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", toggleTheme);
+  }
 
-  // MAC OUI
-  document.getElementById("macLookupBtn").addEventListener("click", handleOuiLookup);
-  document.getElementById("macClearBtn").addEventListener("click", clearMacResult);
+  // OUI
+  loadOui(defaultOuiLines);
+  const macLookupBtn = document.getElementById("macLookupBtn");
+  const macClearBtn = document.getElementById("macClearBtn");
+  const macInput = document.getElementById("macInput");
+  
+  if (macLookupBtn) macLookupBtn.addEventListener("click", handleOuiLookup);
+  if (macClearBtn) macClearBtn.addEventListener("click", clearMacResult);
+  if (macInput) {
+    macInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") handleOuiLookup();
+    });
+  }
 
   // IP Calculator
   initCustomSelect();
-  document.getElementById("ipCalcBtn").addEventListener("click", handleIpCalc);
-  document.getElementById("ipClearBtn").addEventListener("click", clearIpResult);
-  document.getElementById("ipExportBtn").addEventListener("click", exportIpResult);
+  const ipCalcBtn = document.getElementById("ipCalcBtn");
+  const ipClearBtn = document.getElementById("ipClearBtn");
+  const ipExportBtn = document.getElementById("ipExportBtn");
+  const ipInput = document.getElementById("ipInput");
 
-  // Enter key support
-  document.getElementById("macInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleOuiLookup();
-  });
-  document.getElementById("ipInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleIpCalc();
-  });
+  if (ipCalcBtn) ipCalcBtn.addEventListener("click", handleIpCalc);
+  if (ipClearBtn) ipClearBtn.addEventListener("click", clearIpResult);
+  if (ipExportBtn) ipExportBtn.addEventListener("click", exportIpResult);
+  if (ipInput) {
+    ipInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") handleIpCalc();
+    });
+  }
 
   // Image Search
   initImageSearch();
+
+  console.log("Network Toolkit initialized successfully");
 }
 
-init();
+// Run init when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
