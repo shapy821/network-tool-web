@@ -701,7 +701,7 @@ function handleIpCalc() {
 
 function clearIpResult() {
   document.getElementById("ipInput").value = "";
-  document.getElementById("maskInput").value = "";
+  document.getElementById("maskInput").value = "/24";
   document.getElementById("ipResult").textContent = "";
   state.lastIpResult = "";
 }
@@ -761,8 +761,8 @@ function init() {
   document.getElementById("ipInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") handleIpCalc();
   });
-  document.getElementById("maskInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleIpCalc();
+  document.getElementById("maskInput").addEventListener("change", () => {
+    handleIpCalc();
   });
 }
 
